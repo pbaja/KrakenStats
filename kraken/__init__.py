@@ -16,11 +16,14 @@ class Kraken:
         self.base_url = "https://api.kraken.com" if base_url is None else base_url
 
         # Get keys_file
-        if keys_file is not None and os.path.isfile(keys_file):
-            with open(keys_file, "r") as f:
-                data = json.load(f)
-                self.api_key = data["api_key"]
-                self.private_key = data["private_key"]
+        if keys_file is not None:
+            if os.path.isfile(keys_file):
+                with open(keys_file, "r") as f:
+                    data = json.load(f)
+                    self.api_key = data["api_key"]
+                    self.private_key = data["private_key"]
+            else:
+                raise KrakenError(f'Please create {keys_file} with api_key and private_key. This is required to use Kraken API.')
         elif api_key is not None and private_key is not None:
             self.api_key = api_key
             self.private_key = private_key

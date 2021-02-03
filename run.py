@@ -9,7 +9,7 @@ args = sys.argv[1:]
 if 'help' in args:
     print('Usage: run.py <refresh/hide>')
     sys.exit(0)
-force_refresh = 'refresh' args
+force_refresh = 'refresh' in args
 hide_amounts = 'hide' in args
 
 # Get trades
@@ -28,7 +28,7 @@ for trade in trades:
     cost_usd = 0.0
     if b == 'USD': cost_usd += trade.cost
     elif b == 'EUR': cost_usd += trade.cost * 1.2 # TODO: Calculate this accurately
-    else: print('Wrong currency');continue
+    else: print(f'Unsupported currency: {b}');continue
     # Amount we bought/sold
     amount = trade.cost / trade.price
 
@@ -112,30 +112,3 @@ total_live_profit_str = prettyFormat(total_live_profit, suffix='USD', minlen=14,
 total_closed_profit_str = prettyFormat(total_closed_profit, suffix='USD', minlen=14, positiveColor=Cyan)
 print('>'+'TOTAL'.ljust(6), total_live_profit_percentage_str if hide_amounts else total_live_profit_str, total_closed_profit_str, Reset)
 print('')
-# total_paid = 0.0
-# total_worth = 0.0
-# table = []
-# table.append([Bold+'asset'.ljust(6), 'profit'.ljust(11), 'profit usd'.ljust(13), 'value'+Reset])
-# for asset in current_prices.keys() & average_prices.keys():
-#     # Calculate profit or loss
-#     asset_balance = price_count[asset]['balance']
-#     average_price = average_prices[asset]
-#     average_worth = average_price * asset_balance
-#     current_worth = current_prices[asset] * asset_balance
-#     normalized_profit = (current_worth / average_worth) - 1.0
-#     percentage_profit = round(normalized_profit * 100, 2)
-
-#     # Print
-#     color = None #Blue if asset == 'ETH' else None
-#     table.append([asset.ljust(6), prettyFormat(percentage_profit, suffix='%', minlen=11, positiveColor=color), f'{round(current_worth-average_worth, 2)} USD'.ljust(13), str(round(current_worth, 2))])
-
-#     # Sum it up
-#     total_paid += average_worth
-#     total_worth += current_worth
-
-# total_percentage = round((total_worth / total_paid - 1.0) * 100, 2)
-# table.append([Underline+'Total'.ljust(6)+Reset, prettyFormat(total_percentage, suffix='%', minlen=11), f'{round(total_worth-total_paid, 2)} USD'])
-# printTable(table)
-# print('')
-# print(total_worth)
-# print(fees)
