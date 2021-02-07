@@ -25,19 +25,21 @@ BrightMagenta = '\033[35;1m'
 BrightCyan = '\033[36;1m'
 BrightWhite = '\033[37;1m'
 
-# Pretty print profit/loss
-def prettyFormat(value, prefix='', suffix='', minlen=0, positiveColor=None):
+
+def colorizeValue(value, suffix="", positiveColor=None):
+    if value == 0: return '•'
     if positiveColor is None: positiveColor = Green
     sign_str = ("-" if value < 0 else "+")
-    value_str = round(abs(value), 2)
+    value_str = str(round(abs(value), 2))
     color_str = Red if value < 0 else positiveColor
-    content = f'{prefix}{sign_str} {value_str}{suffix}'.ljust(minlen)
-    return f"{color_str}{content}{Reset}"
+    return (color_str, sign_str+value_str+suffix)
 
-def printTable(array):
-    for r, row in enumerate(array):
-        # Build line
-        line = ''
-        for c, item in enumerate(row):
-            line += item
-        print(line)
+def printRow(*cells, color=''):
+    if color is not None: print(color, end='')
+    sizes = [6, 13, 14, 11, 11]
+    for i, cell in enumerate(cells):
+        if isinstance(cell, tuple):
+            print(cell[0] + cell[1].ljust(sizes[i]) + Reset, end='')
+        else:
+            print(cell.ljust(sizes[i]), end='')
+    print('' if color is None else Reset)

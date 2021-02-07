@@ -10,7 +10,8 @@ from .enums import KrakenTradeType
 
 class Kraken:
 
-    def __init__(self, keys_file=None, api_key=None, private_key=None, base_url=None):
+    def __init__(self, keys_file=None, api_key=None, private_key=None, base_url=None, quiet=False):
+        self.quiet = quiet
 
         # Get base url
         self.base_url = "https://api.kraken.com" if base_url is None else base_url
@@ -63,8 +64,7 @@ class Kraken:
         trades_file_path = Path(trades_file)
         last_update_elapsed = time.time() - trades_file_path.stat().st_mtime
         if refresh_interval is not None and last_update_elapsed < refresh_interval:
-            print(f'Got {len(trades)} trades (cached)')
-            return trades
+            return (trades, False)
         
         # Get last trade time
         start_time = None
@@ -86,8 +86,8 @@ class Kraken:
         with open(trades_file, 'w+') as f:
             trades_dict = [trade.__dict__ for trade in trades]
             json.dump(trades_dict, f, indent=4)
-        print(f'Got {len(trades)} trades')
-        return trades
+        if not self.quiet: print(f'Got {len(trades)} trades')
+        return (trades, True)
 
 
     def get_trades(self, trade_type:KrakenTradeType=None, position_trades:bool=None, start_time:int=None, end_time:int=None, offset_idx:int=None) -> List[KrakenTrade]:
