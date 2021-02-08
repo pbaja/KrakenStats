@@ -34,10 +34,10 @@ def colorizeValue(value, suffix="", positiveColor=None):
     color_str = Red if value < 0 else positiveColor
     return (color_str, sign_str+value_str+suffix)
 
-def printRow(*cells, color=''):
+def printRow(*cells, color='', sizes=[]):
     if color is not None: print(color, end='')
-    sizes = [6, 13, 14, 11, 11]
     for i, cell in enumerate(cells):
+        print(' ', end='')
         if isinstance(cell, tuple):
             print(cell[0] + cell[1].ljust(sizes[i]) + Reset, end='')
         else:

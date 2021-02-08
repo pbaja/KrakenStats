@@ -10,9 +10,10 @@ class KrakenData:
         self.kraken = Kraken(keys_file='keys.json' if keys_file is None else keys_file)
         self.quiet = quiet
 
-    def loadTrades(self, force_refresh=False):
+    def loadTrades(self, force_refresh=False, trades_file=None):
         # Load trades from file / download from API
-        self.trades, fresh = self.kraken.load_trades('trades.json', refresh_interval=0 if force_refresh else 60*60*6)
+        if trades_file is None: 'trades.json'
+        self.trades, fresh = self.kraken.load_trades(trades_file, refresh_interval=0 if force_refresh else 60*60*6)
         if not self.quiet: print(f'Loaded {len(self.trades)} trades', '' if fresh else '(cached)')
         # Order them by time
         self.trades = sorted(self.trades, key=lambda trade: trade.time)
@@ -63,7 +64,7 @@ class KrakenData:
                 self.assets[asset]['average_price'] = average_price
 
     def calculateData(self):
-        data = {'total_balance_usd': 0.0, 'total_live_profit': 0.0, 'total_closed_profit': 0.0, 'assets': []}
+        data = {'total_balance_usd': 0.0, 'total_live_profit': 0.0, 'total_closed_profit': 0.0, 'avg_live_profit_percentage': 0.0, 'assets': []}
         for asset in self.assets.keys():
             if self.assets[asset]['average_price'] is None: 
                 continue
@@ -80,12 +81,16 @@ class KrakenData:
             data['total_live_profit'] += live_profit
 
             # Append to data
+            live_profit_percentage = (self.current_prices[asset] / self.assets[asset]['average_price'] * 100.0) - 100.0
             data['assets'].append({
                 'asset': asset,
-                'live_profit_percentage': (self.current_prices[asset] / self.assets[asset]['average_price'] * 100.0) - 100.0,
+                'live_profit_percentage': live_profit_percentage,
                 'live_profit_usd': live_profit,
                 'average_price_usd': self.assets[asset]['average_price'],
                 'closed_profit_usd': closed_profit,
                 'balance': balance
             })
+
+            data['avg_live_profit_percentage'] += live_profit_percentage
+        data['avg_live_profit_percentage'] /= len(data['assets'])
         return data

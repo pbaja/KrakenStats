@@ -4,7 +4,7 @@ from enum import Enum
 from pathlib import Path
 
 from .objects import KrakenTrade, KrakenTicker
-from .errors import KrakenError, KrakenErrorResponse
+from .errors import KrakenError, KrakenErrorResponse, KrakenErrorHttp
 from .enums import KrakenTradeType
 
 
@@ -49,12 +49,13 @@ class Kraken:
         url = self.base_url + path
         response = requests.post(self.base_url+path, data=data, headers=headers)
         if response.status_code != 200:
-            raise KrakenError(f'Server returned HTTP error code: {response.status_code}')
+            raise KrakenErrorHttp(f'Server returned HTTP error code: {response.status_code}', {response.status_code})
         return response.json()
 
     def load_trades(self, trades_file, refresh_interval=None):
         # Load file if exists
         trades = []
+        if trades_file is None: trades_file = 'trades.json'
         if os.path.isfile(trades_file):
             with open(trades_file, 'r') as f:
                 trades_dict = json.load(f)
