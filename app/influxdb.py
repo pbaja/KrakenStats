@@ -1,4 +1,4 @@
-import time, json, os
+import time, json, os, sys
 
 def run():
     # Grab info
@@ -9,10 +9,14 @@ def run():
         raise Exception(f'Please create influxdb.json with fields: url,token,org,bucket and optionally: measurement,field')
 
     # Connect to a database
-    from influxdb_client import InfluxDBClient
+    try:
+        from influxdb_client import InfluxDBClient
+    except ImportError:
+        print('No influxdb_client library. Install with "pip install influxdb_client"')
+        sys.exit(0)
     influx = InfluxDBClient(url=config['url'], token=config['token'], org=config['org'])
     writer = influx.write_api()
-    print('Connected')
+    print('Connected to InfluxDB')
 
     # Get data
     from kraken.errors import KrakenErrorHttp
@@ -21,7 +25,9 @@ def run():
     failed_attempts = 0
     failed_attempts_wait = [2, 3, 5, 10]
     kraken_data = KrakenData(keys_file='keys.json', quiet=True)
-    print('Initialized')
+    print('Initialized Kraken API')
+    interval = config['interval'] if 'interval' in config else 60
+    print(f'Insert every {interval} seconds')
     while True:
         # Refresh
         try:
@@ -33,9 +39,9 @@ def run():
             counter += 1
         except KrakenErrorHttp as e:
             # Get wait time before next attempt
-            failed_attempts += 1
             wait_minutes = failed_attempts_wait[failed_attempts if failed_attempts < len(failed_attempts_wait) else len(failed_attempts_wait)-1]
-            print(f"\nServer returned HTTP {e.code} error. Retrying in {wait_minutes} minutes (attempt {failed_attempts})")
+            failed_attempts += 1
+            print(f"\nKraken API server returned HTTP {e.code} error. Retrying in {wait_minutes} minutes (attempt {failed_attempts})")
             time.sleep(wait_minutes * 60)
             continue
 
@@ -52,4 +58,4 @@ def run():
         else: print(".", end='', flush=True)
 
         # Wait for 60 seconds
-        time.sleep(60)
+        time.sleep(interval)

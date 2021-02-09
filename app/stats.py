@@ -56,6 +56,6 @@ def run():
     printRow('', (Bold, 'TOTAL'), avg_live_profit_percentage_str, total_live_profit_str, total_closed_profit_str, sizes=colSize)
 
     print('')
-    print('Total profit'.ljust(15), round(data['total_live_profit']+data['total_closed_profit'], 2))
-    print('End balance'.ljust(15), round(data['total_balance_usd'], 2))
+    print('Total profit'.ljust(16), round(data['total_live_profit']+data['total_closed_profit'], 2), 'USD')
+    print('Total in crypto'.ljust(16), round(data['total_balance_usd'], 2), 'USD')
     print('')

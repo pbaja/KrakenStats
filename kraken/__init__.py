@@ -54,18 +54,20 @@ class Kraken:
 
     def load_trades(self, trades_file, refresh_interval=None):
         # Load file if exists
-        trades = []
         if trades_file is None: trades_file = 'trades.json'
-        if os.path.isfile(trades_file):
+        trades_file_path = Path(trades_file)
+
+        trades = []
+        if trades_file_path.is_file():
+            # Load data from file
             with open(trades_file, 'r') as f:
                 trades_dict = json.load(f)
                 trades = [KrakenTrade.from_json(trade) for trade in trades_dict]
         
-        # Omit downloading new data
-        trades_file_path = Path(trades_file)
-        last_update_elapsed = time.time() - trades_file_path.stat().st_mtime
-        if refresh_interval is not None and last_update_elapsed < refresh_interval:
-            return (trades, False)
+            # Omit downloading new data
+            last_update_elapsed = time.time() - trades_file_path.stat().st_mtime
+            if refresh_interval is not None and last_update_elapsed < refresh_interval:
+                return (trades, False)
         
         # Get last trade time
         start_time = None

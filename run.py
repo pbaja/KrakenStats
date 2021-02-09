@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 
 # Check python version
 import sys

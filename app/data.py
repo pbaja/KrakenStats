@@ -21,7 +21,7 @@ class KrakenData:
     def loadCurrentPrices(self):
         pairs = [f"{asset}USD" for asset in self.assets.keys() if asset != 'USD']
         tickers = self.kraken.get_tickers(pairs)
-        self.current_prices = {}
+        self.current_prices = {'USD': 1.0}
         for ticker in tickers:
             self.current_prices[ticker.split_pair()[0]] = ticker.ask_price
         if not self.quiet: print('Loaded current prices')
@@ -32,6 +32,7 @@ class KrakenData:
             # Split pair into two assets
             a, b = trade.split_pair()
             if not a in self.assets: self.assets[a] = {'total_paid': 0.0, 'total_balance': 0.0, 'sell_profit': 0.0}
+            #if not b in self.assets: self.assets[b] = {'total_paid': 0.0, 'total_balance': 0.0, 'sell_profit': 0.0}
 
             # How much we paid in USD
             cost_usd = 0.0
@@ -46,15 +47,19 @@ class KrakenData:
             if trade.type == KrakenOrderType.BUY:
                 self.assets[a]['total_paid'] += cost_usd # How much we paid
                 self.assets[a]['total_balance'] += amount # How much we got
-            # Sold some crypto
-            elif trade.type == KrakenOrderType.SELL and self.assets[a]['total_balance'] > EPSILON:
-                # Subtract from current balance keeping average in tact
-                curr_avg_price_usd = self.assets[a]['total_paid'] / self.assets[a]['total_balance']
-                self.assets[a]['total_paid'] -= curr_avg_price_usd * amount
-                self.assets[a]['total_balance'] -= amount
-                # Calculate profit we got from this sell
-                profit = cost_usd - curr_avg_price_usd * amount
-                self.assets[a]['sell_profit'] += profit
+            # Sold some
+            elif trade.type == KrakenOrderType.SELL:
+                if self.assets[a]['total_balance'] > EPSILON:
+                    # Subtract from current balance keeping average in tact
+                    curr_avg_price_usd = self.assets[a]['total_paid'] / self.assets[a]['total_balance']
+                    self.assets[a]['total_paid'] -= curr_avg_price_usd * amount
+                    self.assets[a]['total_balance'] -= amount
+                    # Calculate profit we got from this sell
+                    profit = cost_usd - curr_avg_price_usd * amount
+                    self.assets[a]['sell_profit'] += profit
+                else:
+                    # Bought something with deposited money
+                    pass
 
         for asset, price in self.assets.items():
             if price['total_balance'] < EPSILON: 

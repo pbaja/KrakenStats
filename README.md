@@ -1,10 +1,10 @@
 <p align="center">
-<img align="center" src="preview.png">
+<img align="center" width="50%" src="preview.png">
 </p>
 
 ## Warning
  - This tool is not very accurate, f.eg. it does not consider fees in calculations (work in progress)
- - It does not provide any professional capacity, do *not* use it for calculating taxes!
+ - It does not provide any professional capacity, do **not** use it for calculating taxes!
  - This tool only supports USD/EUR as a buying currency (work in progress)
  - Conversion from EUR to USD is not very accurate either (work in progress)
  - It does not work for positions, only buy/sell trades
@@ -17,7 +17,7 @@
 ## Usage
  - Download code
  - Generate API Key and Private Key by going to kraken.com -> your name -> Security -> API -> Add key. We only need one permission: `Query Ledger Entries`
- - Create `keys.json` file with just generated API Key and Private Key (see below for example file)
+ - Create `keys.json` file (alongside run.py) with just generated API Key and Private Key (see below for example file)
  - Run examples with command `python run.py stats` or see list of examples with `python run.py help`
   
 ### Example keys.json file
@@ -33,6 +33,7 @@
     "org": "home",
     "bucket": "kraken",
     "measurement": "kraken",
-    "field": "profit"
+    "field": "profit",
+	"interval": 60
 }
 ```
