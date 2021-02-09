@@ -1,5 +1,5 @@
 import os, requests, time, hmac, hashlib, base64, urllib, json
-from typing import List
+from typing import List, Tuple
 from enum import Enum
 from pathlib import Path
 
@@ -10,12 +10,9 @@ from .enums import KrakenTradeType
 
 class Kraken:
 
-    def __init__(self, keys_file=None, api_key=None, private_key=None, base_url=None, quiet=False):
-        self.quiet = quiet
-
+    def __init__(self, keys_file=None, api_key=None, private_key=None, base_url=None):
         # Get base url
         self.base_url = "https://api.kraken.com" if base_url is None else base_url
-
         # Get keys_file
         if keys_file is not None:
             if os.path.isfile(keys_file):
@@ -30,7 +27,6 @@ class Kraken:
             self.private_key = private_key
         else:
             raise KrakenError('No keys_file or private_key and api_key supplied')
-
 
     def request_data(self, path, custom_data=None):
 
@@ -52,46 +48,36 @@ class Kraken:
             raise KrakenErrorHttp(f'Server returned HTTP error code: {response.status_code}', {response.status_code})
         return response.json()
 
-    def load_trades(self, trades_file, refresh_interval=None):
-        # Load file if exists
+    def load_trades(self, trades_file, refresh_interval=0) -> Tuple[List[KrakenTrade], bool]:
+        # Load trades from file
         if trades_file is None: trades_file = 'trades.json'
         trades_file_path = Path(trades_file)
-
-        trades = []
         if trades_file_path.is_file():
-            # Load data from file
-            with open(trades_file, 'r') as f:
-                trades_dict = json.load(f)
-                trades = [KrakenTrade.from_json(trade) for trade in trades_dict]
-        
-            # Omit downloading new data
-            last_update_elapsed = time.time() - trades_file_path.stat().st_mtime
-            if refresh_interval is not None and last_update_elapsed < refresh_interval:
-                return (trades, False)
-        
-        # Get last trade time
-        start_time = None
-        if len(trades) > 0:
-            start_time = max(trade.time for trade in trades)
-        
-        # Get all new trades
+            # Check if file is outdated
+            last_update_time = time.time() - trades_file_path.stat().st_mtime
+            if last_update_time < refresh_interval:
+                # Return trades loaded from file
+                with open(trades_file, 'r') as f:
+                    trades_dict = json.load(f)
+                    trades = [KrakenTrade.from_json(trade) for trade in trades_dict]
+                    return (trades, False)
+
+        # Download all trades
         new_trades = []
         offset_idx = 0
         while True:
             # Get new trades, break if no more trades
-            new_trades = self.get_trades(start_time=start_time, offset_idx=offset_idx)
+            new_trades = self.get_trades(offset_idx=offset_idx)
             if len(new_trades) == 0: break
             # Save and continue
             offset_idx += len(new_trades)
             trades += new_trades
 
-        # Save to file
+        # Save to file and return
         with open(trades_file, 'w+') as f:
             trades_dict = [trade.__dict__ for trade in trades]
             json.dump(trades_dict, f, indent=4)
-        if not self.quiet: print(f'Got {len(trades)} trades')
         return (trades, True)
-
 
     def get_trades(self, trade_type:KrakenTradeType=None, position_trades:bool=None, start_time:int=None, end_time:int=None, offset_idx:int=None) -> List[KrakenTrade]:
         # Prepare data

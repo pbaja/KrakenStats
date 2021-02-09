@@ -30,6 +30,10 @@ class KrakenTrade:
     def split_pair(self):
         return split_pair(self.pair)
 
+    @property
+    def amount(self):
+        return self.volume
+
 class KrakenTicker:
 
     @classmethod

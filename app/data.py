@@ -14,7 +14,7 @@ class KrakenData:
         # Load trades from file / download from API
         if trades_file is None: 'trades.json'
         self.trades, fresh = self.kraken.load_trades(trades_file, refresh_interval=0 if force_refresh else 60*60*6)
-        if not self.quiet: print(f'Loaded {len(self.trades)} trades', '' if fresh else '(cached)')
+        if not self.quiet: print(f'Loaded {len(self.trades)} trades', '(updated)' if fresh else '(cached)')
         # Order them by time
         self.trades = sorted(self.trades, key=lambda trade: trade.time)
 
@@ -41,21 +41,21 @@ class KrakenData:
             else: print(f'Unsupported currency: {b}');continue
             
             # Amount we bought/sold
-            amount = trade.cost / trade.price
+            #amount = trade.cost / trade.price
 
             # Bought some crypto
             if trade.type == KrakenOrderType.BUY:
                 self.assets[a]['total_paid'] += cost_usd # How much we paid
-                self.assets[a]['total_balance'] += amount # How much we got
+                self.assets[a]['total_balance'] += trade.amount # How much we got
             # Sold some
             elif trade.type == KrakenOrderType.SELL:
                 if self.assets[a]['total_balance'] > EPSILON:
                     # Subtract from current balance keeping average in tact
                     curr_avg_price_usd = self.assets[a]['total_paid'] / self.assets[a]['total_balance']
-                    self.assets[a]['total_paid'] -= curr_avg_price_usd * amount
-                    self.assets[a]['total_balance'] -= amount
+                    self.assets[a]['total_paid'] -= curr_avg_price_usd * trade.amount
+                    self.assets[a]['total_balance'] -= trade.amount
                     # Calculate profit we got from this sell
-                    profit = cost_usd - curr_avg_price_usd * amount
+                    profit = cost_usd - curr_avg_price_usd * trade.amount
                     self.assets[a]['sell_profit'] += profit
                 else:
                     # Bought something with deposited money
