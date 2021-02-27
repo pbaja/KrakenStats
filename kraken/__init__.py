@@ -63,7 +63,7 @@ class Kraken:
                     return (trades, False)
 
         # Download all trades
-        new_trades = []
+        trades = []
         offset_idx = 0
         while True:
             # Get new trades, break if no more trades

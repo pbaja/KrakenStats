@@ -10,4 +10,4 @@ class KrakenErrorHttp(KrakenError):
 class KrakenErrorResponse(KrakenError):
     def __init__(self, message, data):
         super().__init__(self, message)
-        print(data.keys())
+        print(data)
